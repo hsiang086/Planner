@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Professional Planner</title>
+
+  <!-- Using Poppins Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap"/>
+
+  <!-- Material Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+  <style>
+    /* -----------------------------------------------------
+       THEMES & COLOR VARIABLES
+       Vibrant gradient for "light" theme, darker for "dark"
+    ----------------------------------------------------- */
+    :root {
+      /* Light Theme Colors */
+      --bg-color-1: #9B5DE5;      /* Vibrant purple */
+      --bg-color-2: #F15BB5;      /* Vibrant pink */
+      --container-bg: #ffffff;
+      --text-color: #333;
+      --heading-color: #4f1180;
+      --btn-bg: #4f1180;
+      --btn-bg-hover: #3b0963;
+      --event-bg: #f8f8f8;
+      --border-color: #cccccc;
+      --completed-color: #999999;  /* For completed events text */
+
+      --transition-speed: 0.4s;
+    }
+
+    body.dark {
+      /* Dark Theme Colors */
+      --bg-color-1: #3E206D;
+      --bg-color-2: #612461;
+      --container-bg: #2a2a2a;
+      --text-color: #f0f0f0;
+      --heading-color: #d5b3ff;
+      --btn-bg: #d5b3ff;
+      --btn-bg-hover: #b599e0;
+      --event-bg: #3c3c3c;
+      --border-color: #666666;
+      --completed-color: #aaaaaa;
+    }
+
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-color-1), var(--bg-color-2));
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      background-color: var(--container-bg);
+      margin: 30px auto;
+      padding: 20px 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 0.7s ease-in-out;
+      transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+      position: relative;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--heading-color);
+      margin-bottom: 20px;
+      transition: color var(--transition-speed) ease;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    /* Top Bar (Date Picker, Search, Theme Toggle) */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      gap: 10px;
+    }
+
+    .top-bar > * {
+      flex: 1 1 200px;
+    }
+
+    /* For date picker & search box layouts */
+    .date-picker, .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: 500;
+    }
+
+    input[type="date"],
+    input[type="text"],
+    select,
+    textarea {
+      padding: 6px 10px;
+      font-size: 1em;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      outline: none;
+      background-color: transparent;
+      color: var(--text-color);
+      transition: border var(--transition-speed) ease, background var(--transition-speed) ease;
+    }
+
+    input[type="date"]:focus,
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #999;
+    }
+
+    /* Button styling */
+    .btn {
+      background-color: var(--btn-bg);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover {
+      background-color: var(--btn-bg-hover);
+    }
+
+    .theme-toggle {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    #theme-toggle-btn {
+      background: var(--btn-bg);
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2em; 
+      transition: background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #theme-toggle-btn:hover {
+      background-color: var(--btn-bg-hover);
+    }
+
+    /* Navigation buttons (prev/next day) */
+    .day-nav {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Search results note */
+    .search-results-note {
+      font-size: 0.9em;
+      text-align: right;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      color: #666;
+    }
+
+    /* Print button top-right corner */
+    .print-btn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+    }
+
+    /* The main schedule list */
+    .schedule {
+      border-top: 1px solid var(--border-color);
+      padding-top: 10px;
+      transition: border-color var(--transition-speed) ease;
+      margin-top: 20px;
+    }
+
+    /* Single event item */
+    .event {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: var(--event-bg);
+      border-radius: 8px;
+      transition: background-color var(--transition-speed) ease;
+      position: relative;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .event.completed .description,
+    .event.completed .time,
+    .event.completed .priority-pill {
+      color: var(--completed-color);
+      text-decoration: line-through;
+    }
+
+    /* Time & priority side by side */
+    .time-priority {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .time {
+      font-weight: 700;
+      color: var(--heading-color);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .priority-pill {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75em;
+      color: #fff;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .priority-low {
+      background-color: #3da15b;
+    }
+    .priority-medium {
+      background-color: #df9e27;
+    }
+    .priority-high {
+      background-color: #d84343;
+    }
+
+    .description {
+      flex: 1;
+      font-weight: 500;
+      margin: 0 15px;
+      word-wrap: break-word;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .complete-checkbox {
+      transform: scale(1.3);
+      cursor: pointer;
+    }
+
+    /* Add event button container */
+    .add-event {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    /* Export ICS button */
+    .export-button {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* Modal styling */
+    #modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.4);
+      display: none; /* hidden by default */
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #modal {
+      background-color: var(--container-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+      width: 450px;
+      animation: fadeIn 0.5s ease-in-out;
+      transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+    }
+
+    #modal h2 {
+      margin-bottom: 15px;
+      text-align: center;
+      color: var(--heading-color);
+    }
+
+    #modal form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* For hour/minute dropdowns (mouse-friendly) */
+    .time-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Recurring container */
+    .recurring-group {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Textarea for notes */
+    #notes-textarea {
+      resize: vertical;
+      min-height: 50px;
+    }
+
+    /* Modal actions */
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* For category input + datalist synergy */
+    #category-input {
+      width: 100%;
+    }
+
+    /* PRINT STYLES: show only schedule for printing */
+    @media print {
+      body {
+        margin: 0;
+      }
+      .top-bar,
+      .print-btn,
+      .add-event,
+      .export-button,
+      #modal-overlay {
+        display: none !important;
+      }
+      .container {
+        box-shadow: none;
+        border-radius: 0;
+        margin: 0;
+        width: 100%;
+        padding: 0;
+      }
+      .schedule {
+        border: none;
+        margin-top: 0;
+      }
+      .schedule .event {
+        page-break-inside: avoid; /* prevent event from splitting between pages */
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Print Schedule Button -->
+    <button class="btn print-btn" onclick="window.print()">
+      <span class="material-icons">print</span>Print
+    </button>
+
+    <h1>Professional Planner</h1>
+    
+    <!-- Top bar: date, nav, search, theme toggle -->
+    <div class="top-bar">
+
+      <div class="day-nav">
+        <button class="btn" id="prev-day-btn">
+          <span class="material-icons">chevron_left</span>Prev Day
+        </button>
+        <button class="btn" id="next-day-btn">
+          Next Day<span class="material-icons">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- Date Picker -->
+      <div class="date-picker">
+        <label for="date-input">Date:</label>
+        <input type="date" id="date-input"/>
+      </div>
+
+      <!-- Search Box -->
+      <div class="search-box">
+        <label for="search-input">Search:</label>
+        <input type="text" id="search-input" placeholder="Find events..." />
+      </div>
+
+      <!-- Theme Toggle Icon -->
+      <div class="theme-toggle">
+        <button id="theme-toggle-btn">
+          <span class="material-icons">dark_mode</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search results info -->
+    <div class="search-results-note" id="search-results-note" style="display: none;">
+      Showing <span id="search-count"></span> result(s).
+    </div>
+
+    <!-- Schedule container -->
+    <div class="schedule" id="schedule"></div>
+
+    <!-- Add event button -->
+    <div class="add-event">
+      <button class="btn" onclick="openModal()">
+        <span class="material-icons">add</span>Add Event
+      </button>
+    </div>
+
+    <!-- Export ICS button -->
+    <div class="export-button">
+      <button class="btn" onclick="exportToICS()">
+        <span class="material-icons">download</span>Export Day as ICS
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal for adding/editing event -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <h2 id="modal-title">Add Event</h2>
+      <form id="event-form">
+        
+        <!-- Time (hour/minute dropdowns) -->
+        <label>Time:</label>
+        <div class="time-group">
+          <select id="hour-select"></select>
+          <span>:</span>
+          <select id="minute-select"></select>
+        </div>
+
+        <!-- Description (optional) -->
+        <label for="event-description">Description (optional):</label>
+        <input type="text" id="event-description" placeholder="e.g. Team Meeting" />
+
+        <!-- Category (optional) - with memory from localStorage -->
+        <label for="category-input">Category (optional):</label>
+        <input list="category-list" id="category-input" placeholder="e.g. Work, Birthday..." />
+        <datalist id="category-list"></datalist>
+
+        <!-- Priority -->
+        <label for="priority-select">Priority:</label>
+        <select id="priority-select">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+
+        <!-- Recurring -->
+        <div class="recurring-group">
+          <label for="recurring-select">Recurring:</label>
+          <select id="recurring-select">
+            <option value="none" selected>None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <!-- Notes (optional) -->
+        <label for="notes-textarea">Notes (optional):</label>
+        <textarea id="notes-textarea" placeholder="Additional details..."></textarea>
+
+        <!-- Actions (Cancel/Save) -->
+        <div class="modal-actions">
+          <button type="button" class="btn" id="cancel-button">
+            <span class="material-icons">close</span>Discard
+          </button>
+          <button type="submit" class="btn">
+            <span class="material-icons">save</span>Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* ---------------------------------------------------------------------
+       GLOBAL VARIABLES & INITIALIZATION
+    --------------------------------------------------------------------- */
+    let currentDate = '';         
+    let currentEditIndex = null;  
+
+    const scheduleContainer = document.getElementById('schedule');
+    const dateInput = document.getElementById('date-input');
+    const searchInput = document.getElementById('search-input');
+    const searchResultsNote = document.getElementById('search-results-note');
+    const searchCountSpan = document.getElementById('search-count');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const eventForm = document.getElementById('event-form');
+    const cancelButton = document.getElementById('cancel-button');
+
+    // Time picker dropdowns
+    const hourSelect = document.getElementById('hour-select');
+    const minuteSelect = document.getElementById('minute-select');
+
+    // Input fields
+    const descInput = document.getElementById('event-description');
+    const categoryInput = document.getElementById('category-input');
+    const categoryList = document.getElementById('category-list');
+    const prioritySelect = document.getElementById('priority-select');
+    const recurringSelect = document.getElementById('recurring-select');
+    const notesTextarea = document.getElementById('notes-textarea');
+
+    // Local Storage keys
+    const STORAGE_KEY = 'scheduleData_v3';
+    const THEME_KEY = 'preferredTheme_v3';
+    const CATEGORIES_KEY = 'storedCategories_v3';
+
+    // On load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Populate hour/minute selects
+      initTimeDropdowns();
+
+      // Set date to today by default
+      const today = new Date().toISOString().split('T')[0];
+      dateInput.value = today;
+      currentDate = today;
+      loadEventsForDate(currentDate);
+
+      // Load any saved categories into <datalist>
+      loadStoredCategories();
+
+      // Check saved theme
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme === 'dark') {
+        document.body.classList.add('dark');
+      }
+    });
+
+    function initTimeDropdowns() {
+      // Hours 0..23
+      for (let h = 0; h < 24; h++) {
+        const hh = String(h).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = hh;
+        opt.textContent = hh;
+        hourSelect.appendChild(opt);
+      }
+      // Minutes in increments of 15
+      [0, 15, 30, 45].forEach(m => {
+        const mm = String(m).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = mm;
+        opt.textContent = mm;
+        minuteSelect.appendChild(opt);
+      });
+    }
+
+    /* ---------------------------------------------------------------------
+       DATE NAVIGATION
+    --------------------------------------------------------------------- */
+    document.getElementById('prev-day-btn').addEventListener('click', () => {
+      shiftDay(-1);
+    });
+    document.getElementById('next-day-btn').addEventListener('click', () => {
+      shiftDay(1);
+    });
+
+    function shiftDay(offset) {
+      // Build a date from currentDate in a reliable way
+      const d = new Date(Date.parse(currentDate + 'T00:00:00'));
+      d.setDate(d.getDate() + offset);
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+
+      currentDate = `${yyyy}-${mm}-${dd}`;
+      dateInput.value = currentDate;
+      loadEventsForDate(currentDate);
+      searchInput.value = '';
+      hideSearchResults();
+    }
+
+    // Date change
+    dateInput.addEventListener('change', () => {
+      currentDate = dateInput.value;
+      loadEventsForDate(currentDate);
+      searchInput.value = '';
+      hideSearchResults();
+    });
+
+    // Theme toggle
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      // Save preference
+      if (document.body.classList.contains('dark')) {
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    });
+
+    /* ---------------------------------------------------------------------
+       LOCAL STORAGE FUNCTIONS
+    --------------------------------------------------------------------- */
+    function getScheduleData() {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : {};
+    }
+    function saveScheduleData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getStoredCategories() {
+      const data = localStorage.getItem(CATEGORIES_KEY);
+      return data ? JSON.parse(data) : [];
+    }
+    function saveStoredCategories(catArray) {
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(catArray));
+    }
+
+    function loadStoredCategories() {
+      // Clear existing <datalist> options
+      categoryList.innerHTML = '';
+      const catArray = getStoredCategories();
+      catArray.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        categoryList.appendChild(opt);
+      });
+    }
+
+    /* ---------------------------------------------------------------------
+       LOAD & DISPLAY EVENTS
+    --------------------------------------------------------------------- */
+    function loadEventsForDate(date) {
+      const scheduleData = getScheduleData();
+      scheduleContainer.innerHTML = '';
+
+      if (!scheduleData[date] || scheduleData[date].length === 0) {
+        return;
+      }
+
+      // Sort events by time (HH:MM)
+      scheduleData[date].sort((a, b) => {
+        const [hA, mA] = a.time.split(':').map(Number);
+        const [hB, mB] = b.time.split(':').map(Number);
+        return hA !== hB ? hA - hB : mA - mB;
+      });
+
+      // Display each event
+      scheduleData[date].forEach((eventObj, index) => {
+        createEventElement(eventObj, index);
+      });
+    }
+
+    function createEventElement(eventObj, index) {
+      const eventDiv = document.createElement('div');
+      eventDiv.className = 'event';
+      if (eventObj.completed) {
+        eventDiv.classList.add('completed');
+      }
+
+      // Time & priority side
+      const tpDiv = document.createElement('div');
+      tpDiv.className = 'time-priority';
+
+      const timeDiv = document.createElement('div');
+      timeDiv.className = 'time';
+      timeDiv.textContent = eventObj.time;
+
+      // Priority
+      const priorityPill = document.createElement('div');
+      priorityPill.classList.add('priority-pill', `priority-${eventObj.priority}`);
+      priorityPill.textContent = eventObj.priority;
+
+      tpDiv.appendChild(timeDiv);
+      tpDiv.appendChild(priorityPill);
+
+      // Description
+      const descDiv = document.createElement('div');
+      descDiv.className = 'description';
+
+      // If category is provided, add it in parentheses
+      let catText = eventObj.category ? ` (${eventObj.category})` : '';
+      descDiv.textContent = (eventObj.description || 'No Description') + catText;
+
+      // Actions
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'actions';
+
+      // Complete checkbox
+      const completeCheckbox = document.createElement('input');
+      completeCheckbox.type = 'checkbox';
+      completeCheckbox.className = 'complete-checkbox';
+      completeCheckbox.checked = eventObj.completed ? true : false;
+      completeCheckbox.title = 'Mark as complete';
+      completeCheckbox.onchange = () => toggleComplete(index, completeCheckbox.checked);
+
+      // Edit button
+      const editButton = document.createElement('button');
+      editButton.className = 'btn';
+      editButton.innerHTML = '<span class="material-icons">edit</span>';
+      editButton.title = 'Edit event';
+      editButton.onclick = () => editEvent(index);
+
+      // Delete button
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'btn';
+      deleteButton.innerHTML = '<span class="material-icons">delete</span>';
+      deleteButton.title = 'Delete event';
+      deleteButton.onclick = () => deleteEvent(index);
+
+      actionsDiv.appendChild(completeCheckbox);
+      actionsDiv.appendChild(editButton);
+      actionsDiv.appendChild(deleteButton);
+
+      eventDiv.appendChild(tpDiv);
+      eventDiv.appendChild(descDiv);
+      eventDiv.appendChild(actionsDiv);
+
+      // If notes exist, add them below
+      if (eventObj.notes && eventObj.notes.trim() !== '') {
+        const notesDiv = document.createElement('div');
+        notesDiv.style.fontSize = '0.85em';
+        notesDiv.style.marginTop = '5px';
+        notesDiv.style.opacity = '0.8';
+        notesDiv.textContent = `Notes: ${eventObj.notes}`;
+        eventDiv.appendChild(notesDiv);
+      }
+
+      scheduleContainer.appendChild(eventDiv);
+    }
+
+    /* ---------------------------------------------------------------------
+       MARK AS COMPLETE
+    --------------------------------------------------------------------- */
+    function toggleComplete(index, isComplete) {
+      const scheduleData = getScheduleData();
+      if (!scheduleData[currentDate]) return;
+
+      scheduleData[currentDate][index].completed = isComplete;
+      saveScheduleData(scheduleData);
+      loadEventsForDate(currentDate);
+    }
+
+    /* ---------------------------------------------------------------------
+       EVENT CRUD
+    --------------------------------------------------------------------- */
+    function openModal() {
+      currentEditIndex = null;
+      // Reset fields
+      hourSelect.value = '12';
+      minuteSelect.value = '00';
+      descInput.value = '';
+      categoryInput.value = '';
+      prioritySelect.value = 'medium';
+      recurringSelect.value = 'none';
+      notesTextarea.value = '';
+      document.getElementById('modal-title').textContent = 'Add Event';
+
+      showModal();
+    }
+
+    function editEvent(index) {
+      currentEditIndex = index;
+      const scheduleData = getScheduleData();
+      const eventObj = scheduleData[currentDate][index];
+
+      // Populate the form
+      const [eh, em] = eventObj.time.split(':');
+      hourSelect.value = eh.padStart(2, '0');
+      minuteSelect.value = em.padStart(2, '0');
+      descInput.value = eventObj.description || '';
+      categoryInput.value = eventObj.category || '';
+      prioritySelect.value = eventObj.priority;
+      recurringSelect.value = eventObj.recurring || 'none';
+      notesTextarea.value = eventObj.notes || '';
+      document.getElementById('modal-title').textContent = 'Edit Event';
+      showModal();
+    }
+
+    function deleteEvent(index) {
+      if (!confirm('Are you sure you want to delete this event?')) return;
+      const scheduleData = getScheduleData();
+      scheduleData[currentDate].splice(index, 1);
+      saveScheduleData(scheduleData);
+      loadEventsForDate(currentDate);
+    }
+
+    /* ---------------------------------------------------------------------
+       RECURRING EVENTS
+       If user selects daily/weekly/monthly, replicate event across future dates.
+       This is a simple approach; you can refine as needed.
+    --------------------------------------------------------------------- */
+    function applyRecurring(eventObj) {
+      if (eventObj.recurring === 'none') return;
+
+      const scheduleData = getScheduleData();
+      const [year, month, day] = currentDate.split('-').map(Number);
+      const baseDate = new Date(year, month - 1, day);
+
+      // We'll replicate for next 5 occurrences as an example.
+      for (let i = 1; i <= 5; i++) {
+        let newDate = new Date(baseDate);
+        if (eventObj.recurring === 'daily') {
+          newDate.setDate(newDate.getDate() + i);
+        } else if (eventObj.recurring === 'weekly') {
+          newDate.setDate(newDate.getDate() + i * 7);
+        } else if (eventObj.recurring === 'monthly') {
+          newDate.setMonth(newDate.getMonth() + i);
+        }
+        const yyyy = newDate.getFullYear();
+        const mm = String(newDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(newDate.getDate()).padStart(2, '0');
+        const dateKey = `${yyyy}-${mm}-${dd}`;
+
+        if (!scheduleData[dateKey]) {
+          scheduleData[dateKey] = [];
+        }
+        // Add same event
+        scheduleData[dateKey].push({
+          time: eventObj.time,
+          description: eventObj.description,
+          category: eventObj.category,
+          priority: eventObj.priority,
+          notes: eventObj.notes,
+          recurring: 'none', // Stop further replication
+          completed: false
+        });
+      }
+      saveScheduleData(scheduleData);
+    }
+
+    /* ---------------------------------------------------------------------
+       SEARCH/FILTER
+    --------------------------------------------------------------------- */
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase().trim();
+      if (!query) {
+        // Reload all
+        loadEventsForDate(currentDate);
+        hideSearchResults();
+        return;
+      }
+
+      const scheduleData = getScheduleData();
+      const events = scheduleData[currentDate] || [];
+      const filtered = events.filter(e => 
+        (e.description && e.description.toLowerCase().includes(query)) ||
+        (e.category && e.category.toLowerCase().includes(query)) ||
+        (e.notes && e.notes.toLowerCase().includes(query))
+      );
+
+      scheduleContainer.innerHTML = '';
+      // Sort them
+      filtered.sort((a, b) => {
+        const [hA, mA] = a.time.split(':').map(Number);
+        const [hB, mB] = b.time.split(':').map(Number);
+        return hA !== hB ? hA - hB : mA - mB;
+      });
+      filtered.forEach((eventObj, index) => createEventElement(eventObj, index));
+
+      if (filtered.length > 0) {
+        showSearchResults(filtered.length);
+      } else {
+        showSearchResults(0);
+      }
+    });
+
+    function showSearchResults(count) {
+      searchResultsNote.style.display = 'block';
+      searchCountSpan.textContent = count;
+    }
+    function hideSearchResults() {
+      searchResultsNote.style.display = 'none';
+    }
+
+    /* ---------------------------------------------------------------------
+       MODAL & FORM
+    --------------------------------------------------------------------- */
+    function showModal() {
+      modalOverlay.style.display = 'flex';
+    }
+    function closeModal() {
+      modalOverlay.style.display = 'none';
+    }
+    cancelButton.addEventListener('click', () => closeModal());
+
+    eventForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const scheduleData = getScheduleData();
+      if (!scheduleData[currentDate]) {
+        scheduleData[currentDate] = [];
+      }
+
+      // Build time in HH:MM
+      const hh = hourSelect.value.padStart(2, '0');
+      const mm = minuteSelect.value.padStart(2, '0');
+      const newTime = `${hh}:${mm}`;
+
+      // Collect form data
+      const newEvent = {
+        time: newTime,
+        description: descInput.value || '',
+        category: categoryInput.value || '',
+        priority: prioritySelect.value,
+        recurring: recurringSelect.value,
+        notes: notesTextarea.value || '',
+        completed: false
+      };
+
+      // Save category to localStorage if not empty
+      if (newEvent.category.trim() !== '') {
+        let catArray = getStoredCategories();
+        if (!catArray.includes(newEvent.category)) {
+          catArray.push(newEvent.category);
+          saveStoredCategories(catArray);
+        }
+        // re-load categories to reflect new input
+        loadStoredCategories();
+      }
+
+      // If editing, update existing
+      if (currentEditIndex !== null) {
+        scheduleData[currentDate][currentEditIndex] = newEvent;
+      } else {
+        // Otherwise, create new
+        scheduleData[currentDate].push(newEvent);
+        // Apply recurring logic if any
+        applyRecurring(newEvent);
+      }
+
+      saveScheduleData(scheduleData);
+      loadEventsForDate(currentDate);
+      closeModal();
+      // Clear search
+      searchInput.value = '';
+      hideSearchResults();
+    });
+
+    /* ---------------------------------------------------------------------
+       ICS EXPORT (for the current date)
+    --------------------------------------------------------------------- */
+    function exportToICS() {
+      const scheduleData = getScheduleData();
+      const events = scheduleData[currentDate] || [];
+      if (events.length === 0) {
+        alert('No events to export for this date.');
+        return;
+      }
+
+      let icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//ProfessionalPlanner//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+`;
+      events.forEach((ev, idx) => {
+        const [year, month, day] = currentDate.split('-');
+        const [hour, minute] = ev.time.split(':');
+        // Minimal approach: start time is the event time, end time is +1 hour
+        const startDateTime = toICSDateTime(year, month, day, hour, minute);
+        const endDateTime = toICSDateTime(year, month, day, Number(hour) + 1, minute);
+
+        // ICS fields
+        icsContent += `BEGIN:VEVENT
+UID:${currentDate}-${idx}@professionalplanner
+DTSTAMP:${toICSDateTimeRaw(new Date())}
+DTSTART:${startDateTime}
+DTEND:${endDateTime}
+SUMMARY:${escapeICS(ev.description || 'No Description')}
+DESCRIPTION:Category: ${escapeICS(ev.category || '')}\\nPriority: ${ev.priority.toUpperCase()}\\nNotes: ${escapeICS(ev.notes || '')}
+END:VEVENT
+`;
+      });
+      icsContent += 'END:VCALENDAR';
+
+      const blob = new Blob([icsContent], { type: 'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Schedule_${currentDate}.ics`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function toICSDateTime(y, mo, d, h, mi) {
+      const dt = new Date(y, mo - 1, d, h, mi);
+      return dt.getFullYear().toString().padStart(4,'0') +
+        (dt.getMonth() + 1).toString().padStart(2,'0') +
+        dt.getDate().toString().padStart(2,'0') + 'T' +
+        dt.getHours().toString().padStart(2,'0') +
+        dt.getMinutes().toString().padStart(2,'0') +
+        dt.getSeconds().toString().padStart(2,'0');
+    }
+    function toICSDateTimeRaw(dateObj) {
+      return dateObj.getFullYear().toString().padStart(4,'0') +
+        (dateObj.getMonth() + 1).toString().padStart(2,'0') +
+        dateObj.getDate().toString().padStart(2,'0') + 'T' +
+        dateObj.getHours().toString().padStart(2,'0') +
+        dateObj.getMinutes().toString().padStart(2,'0') +
+        dateObj.getSeconds().toString().padStart(2,'0') + 'Z';
+    }
+    function escapeICS(str) {
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\n/g, '\\n');
+    }
+  </script>
+</body>
+</html>

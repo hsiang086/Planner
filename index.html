@@ -295,10 +295,14 @@
       margin-top: 30px;
     }
 
-    /* Export ICS button */
-    .export-button {
+    /* Export / Import ICS buttons */
+    .extra-buttons {
       margin-top: 10px;
       text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     /* Modal styling */
@@ -378,7 +382,7 @@
       .top-bar,
       .print-btn,
       .add-event,
-      .export-button,
+      .extra-buttons,
       #modal-overlay {
         display: none !important;
       }
@@ -457,11 +461,27 @@
       </button>
     </div>
 
-    <!-- Export ICS button -->
-    <div class="export-button">
-      <button class="btn" onclick="exportToICS()">
-        <span class="material-icons">download</span>Export Day as ICS
-      </button>
+    <!-- Extra ICS Import/Export Buttons -->
+    <div class="extra-buttons">
+      <div>
+        <!-- Hidden file input for ICS Import -->
+        <input
+          type="file"
+          id="ics-import-input"
+          accept=".ics"
+          style="display: none;"
+          onchange="handleICSImport(this.files[0])"
+        />
+        <button class="btn" onclick="document.getElementById('ics-import-input').click()">
+          <span class="material-icons">upload</span>Import ICS
+        </button>
+      </div>
+      <div>
+        <!-- Export ICS button -->
+        <button class="btn" onclick="exportToICS()">
+          <span class="material-icons">download</span>Export Day as ICS
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1052,6 +1072,91 @@ END:VEVENT
         .replace(/;/g, '\\;')
         .replace(/,/g, '\\,')
         .replace(/\n/g, '\\n');
+    }
+
+    /* ---------------------------------------------------------------------
+       ICS IMPORT
+       We'll parse .ics files in a simplified manner:
+       - Looks for VEVENT blocks
+       - Extract DTSTART (date/time), SUMMARY, DESCRIPTION
+       - Create events on the schedule for those date(s)
+    --------------------------------------------------------------------- */
+    function handleICSImport(file) {
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const icsText = event.target.result;
+        parseAndImportICS(icsText);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseAndImportICS(icsText) {
+      const scheduleData = getScheduleData();
+
+      // Split lines, remove any Windows \r
+      const lines = icsText.split('\n').map(line => line.trim());
+      let currentEvent = null;
+
+      for (let line of lines) {
+        if (line.startsWith('BEGIN:VEVENT')) {
+          currentEvent = {};
+        } else if (line.startsWith('END:VEVENT')) {
+          // Finalize the event
+          if (currentEvent && currentEvent.dateKey) {
+            // Ensure dateKey array
+            if (!scheduleData[currentEvent.dateKey]) {
+              scheduleData[currentEvent.dateKey] = [];
+            }
+            scheduleData[currentEvent.dateKey].push({
+              time: currentEvent.time || '00:00',
+              description: currentEvent.summary || 'No Description',
+              category: '',  // we can't reliably parse category from ICS, you can tweak
+              priority: 'medium',
+              notes: (currentEvent.description || '').replace(/\\n/g, '\n'),
+              recurring: 'none',
+              completed: false
+            });
+          }
+          currentEvent = null;
+        } else if (currentEvent) {
+          // We're inside a VEVENT
+          if (line.startsWith('DTSTART')) {
+            // e.g. DTSTART:20250101T130000
+            const dtVal = line.split(':')[1] || '';
+            // parse e.g. 2025-01-01T13:00
+            const year = dtVal.substr(0,4);
+            const month = dtVal.substr(4,2);
+            const day = dtVal.substr(6,2);
+            let hour = '00';
+            let minute = '00';
+            if (dtVal.includes('T')) {
+              hour = dtVal.substr(9,2);
+              minute = dtVal.substr(11,2);
+            }
+            currentEvent.dateKey = `${year}-${month}-${day}`;
+            currentEvent.time = `${hour}:${minute}`;
+          }
+          else if (line.startsWith('SUMMARY')) {
+            // e.g. SUMMARY:My Event
+            const parts = line.split(':');
+            parts.shift(); // remove "SUMMARY"
+            currentEvent.summary = parts.join(':').replace(/\\,/g, ',');
+          }
+          else if (line.startsWith('DESCRIPTION')) {
+            // e.g. DESCRIPTION:Some text
+            const parts = line.split(':');
+            parts.shift(); // remove "DESCRIPTION"
+            currentEvent.description = parts.join(':');
+          }
+        }
+      }
+
+      // Save data, reload
+      saveScheduleData(scheduleData);
+      loadEventsForDate(currentDate);
+      alert('ICS file imported successfully!');
     }
   </script>
 </body>
